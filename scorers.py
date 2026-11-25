@@ -22,7 +22,8 @@ from mlflow.genai.scorers import scorer
 from mlflow.genai.judges import is_correct, is_grounded
 
 REFUSAL = "I could not find this in the GDPR or DPDP Act text provided."
-CITE_RE = re.compile(r"\[((?:GDPR Article|DPDP Section) \d+|DPDP Schedule)\]")
+BRACKET_RE = re.compile(r"\[([^\]]+)\]")
+LABEL_RE = re.compile(r"GDPR Article \d+|DPDP Section \d+|DPDP Schedule")
 HEDGE_RE = re.compile(r"\]\s*or\s*\[", re.IGNORECASE)
 
 
@@ -36,7 +37,15 @@ def _retrieved(outputs):
 
 
 def _cited(answer):
-    return set(CITE_RE.findall(answer))
+    """Base labels from every [...] in the answer.
+    "[GDPR Article 4(1)]" -> "GDPR Article 4"
+    "[GDPR Article 35, paragraph 1]" -> "GDPR Article 35"
+    "[GDPR Article 83, DPDP Schedule]" -> both labels
+    """
+    found = set()
+    for inside in BRACKET_RE.findall(answer):
+        found.update(LABEL_RE.findall(inside))
+    return found
 
 
 def _is_refusal(answer):

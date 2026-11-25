@@ -182,7 +182,7 @@ EXAM = [
         "expected_sources": [["GDPR Article 33"], ["DPDP Section 8"]],
         "expected_facts": [
             "Under the GDPR the controller must notify the supervisory authority within 72 hours where feasible.",
-            "Under the DPDP Act the Data Fiduciary must inform the Board and each affected Data Principal in the prescribed form and manner.",
+            "Under the DPDP Act the Data Fiduciary must inform the Board and each affected Data Principal in the prescribed form and manner; the Act itself does not set a specific deadline.",
         ],
         "should_refuse": False,
     },
@@ -280,7 +280,7 @@ EXAM = [
     {
         "id": "S04", "category": "detail",
         "question": "Where can a person appeal against an order of the Data Protection Board of India?",
-        "expected_sources": [["DPDP Section 29", "DPDP Section 2"]],
+        "expected_sources": [["DPDP Section 29"]],
         "expected_facts": [
             "Appeals go to the Appellate Tribunal, the Telecom Disputes Settlement and Appellate Tribunal.",
             "The appeal must be filed within sixty days.",
