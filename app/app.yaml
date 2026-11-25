@@ -1,0 +1,6 @@
+command: ["streamlit", "run", "app.py"]
+env:
+  - name: SERVING_ENDPOINT
+    value: "privacylens-api"
+  - name: MODEL_VERSION
+    value: "2"
