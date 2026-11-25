@@ -1,19 +1,11 @@
-import pandas as pd
 import mlflow
+import pandas as pd
 from mlflow.pyfunc import PythonModel
 from mlflow.models import set_model
 from mlflow.deployments import get_deploy_client
 from retrieval import retrieve_context
 
 LLM = "databricks-meta-llama-3-3-70b-instruct"
-
-SYSTEM_PROMPT = """You are PrivacyLens, an educational assistant for India's DPDP Act 2023 and the EU GDPR.
-Rules:
-1. Answer ONLY using the context provided. Do not use outside knowledge.
-2. Cite every claim with its source in square brackets, exactly as labelled in the context, e.g. [GDPR Article 17] or [DPDP Section 12].
-3. If the context does not contain the answer, reply exactly: "I could not find this in the GDPR or DPDP Act text provided."
-4. When both laws are relevant, explain each and note key differences.
-5. Keep the answer under 200 words. This is not legal advice."""
 
 def short_cite(h):
     if h["section_num"] == "Schedule":
@@ -31,6 +23,8 @@ def traced_retrieve(question, law=None):
 class PrivacyLensModel(PythonModel):
     def load_context(self, context):
         self.deploy = get_deploy_client("databricks")
+        # The prompt text is pinned into the model when it is logged
+        self.system_prompt = context.model_config["system_prompt"]
 
     @mlflow.trace(span_type="LLM")
     def _call_llm(self, messages):
@@ -41,7 +35,6 @@ class PrivacyLensModel(PythonModel):
 
     @mlflow.trace(span_type="CHAIN")
     def predict(self, context, model_input, params=None):
-        # Accept a dict or a DataFrame; always work with one row per question
         if isinstance(model_input, dict):
             model_input = pd.DataFrame(model_input)
         records = model_input.to_dict("records")
@@ -53,7 +46,7 @@ class PrivacyLensModel(PythonModel):
             law = law if isinstance(law, str) and law else None
             hits = traced_retrieve(question, law)
             messages = [
-                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "system", "content": self.system_prompt},
                 {"role": "user", "content": f"Context:\n{build_context(hits)}\n\nQuestion: {question}"},
             ]
             outputs.append({
